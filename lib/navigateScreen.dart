@@ -50,7 +50,7 @@ class _YoloVideoState extends State<YoloVideo> {
 
   init() async {
     cameras = await availableCameras();
-    controller = CameraController(cameras[0], ResolutionPreset.low);
+    controller = CameraController(cameras[0], ResolutionPreset.max);
     controller.initialize().then((value) {
       setState(() {
         isLoaded = true;
@@ -91,6 +91,18 @@ class _YoloVideoState extends State<YoloVideo> {
         ),
         ...displayBoxesAroundRecognizedObjects(size),
         Positioned(
+          top: 45,
+          left: 15,
+          child: GestureDetector(
+            onTap: backButtonPress,
+            child: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+        ),
+        Positioned(
           bottom: 75,
           width: MediaQuery.of(context).size.width,
           child: Container(
@@ -128,6 +140,18 @@ class _YoloVideoState extends State<YoloVideo> {
     ));
   }
 
+  void backButtonPress() async {
+    final url = Uri.parse('http://cd55-34-31-157-144.ngrok-free.app/');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      print('HTTP Request Successful');
+    } else {
+      print('HTTP Request Failed');
+    }
+    Navigator.of(context).pop();
+  }
+
   String decodeUnicodeEscape(String text) {
     return text.replaceAllMapped(RegExp(r'\\u(\w{4})'), (match) {
       return String.fromCharCode(int.parse(match.group(1)!, radix: 16));
@@ -142,7 +166,7 @@ class _YoloVideoState extends State<YoloVideo> {
       print(size.width);
       print(size.height);
       print(">>>>>>>>>");
-      var url = Uri.parse('http://a4de-34-125-38-26.ngrok.io/upload');
+      var url = Uri.parse('http://cd55-34-31-157-144.ngrok-free.app/upload');
       var request = http.MultipartRequest("POST", url);
 
       // Convert the YUV420 image to PNG bytes
@@ -174,7 +198,9 @@ class _YoloVideoState extends State<YoloVideo> {
         print("recognitions: $responseData");
         print("----------------------------------");
         await helper.speak(speech);
-        stopDetection();
+        setState(() {
+          isEvaluating = false;
+        });
       } else {
         print('Failed to send frame to API: $response');
       }

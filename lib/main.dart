@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
+import 'package:beyond_vis/uploadImage.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'navigateScreen.dart';
 import 'helper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 late List<CameraDescription> cameras;
 main() async {
@@ -15,6 +20,7 @@ main() async {
       routes: {
         '/': (context) => const MyApp(),
         '/yoloOnFrame': (context) => const YoloVideo(),
+        '/yoloOnImage': (context) => const ImageUploadScreen(),
       },
     ),
   );
@@ -29,6 +35,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Helper helper = Helper();
+  final picker = ImagePicker();
 
   @override
   void initState() {
@@ -63,10 +70,44 @@ class _MyAppState extends State<MyApp> {
     helper.stopListening();
   }
 
+  Future<void> makeHttpRequest() async {
+    final url = Uri.parse('http://1392-34-74-31-196.ngrok.io/');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      print('HTTP Request Successful');
+    } else {
+      print('HTTP Request Failed');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    makeHttpRequest();
     return Scaffold(
-      body: task(),
+      body: Stack(
+        children: [
+          Image.asset(
+            'lib/assets/background.png',
+            fit: BoxFit.cover,
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 2 / 3,
+            left: 0,
+            right: 0,
+            child: const Center(
+              child: Text(
+                "Choose Task",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: SpeedDial(
         icon: Icons.menu,
         activeIcon: Icons.close,
@@ -93,12 +134,18 @@ class _MyAppState extends State<MyApp> {
               });
             },
           ),
+          SpeedDialChild(
+            child: const Icon(Icons.add),
+            label: 'Navigation on Gallery Image',
+            labelStyle: const TextStyle(fontSize: 18.0),
+            onTap: () {
+              setState(() {
+                Navigator.pushNamed(context, '/yoloOnImage');
+              });
+            },
+          ),
         ],
       ),
     );
-  }
-
-  Widget task() {
-    return const Center(child: Text("Choose Task"));
   }
 }
